@@ -8,7 +8,8 @@ import copy
 X = "X"
 O = "O"
 EMPTY = None
-
+MAX = 9999
+MIN = -9999
 
 def initial_state():
     """
@@ -136,49 +137,65 @@ def minimax(board):
 
     optimal = None
     
+    alpha = MIN
+    beta = MAX
+
     if(player(board) == X):
-        aux = -9999
+        aux = MIN
         
         for action in actions(board):
-            minValue = _min(result(board, action))
-            if(aux <= minValue):
+            minValue = _min(result(board, action), alpha, beta)
+            if(aux < minValue):
                 aux = minValue
                 optimal = action
+            alpha = max(alpha, aux)
+            if(alpha >= beta):
+                break
 
     else:
-        aux = 9999
+        aux = MAX
 
         for action in actions(board):
-            maxValue = _max(result(board, action))
-            if(aux >= maxValue):
+            maxValue = _max(result(board, action), alpha, beta)
+            if(aux > maxValue):
                 aux = maxValue
                 optimal = action
+            
+            beta = min(beta, aux)
+            if(alpha >= beta):
+                break
 
     return optimal
 
 
 
-def _min(board):
+def _min(board, alpha, beta):
 
     if(terminal(board)):
         return utility(board)
 
-    aux = 99999
+    aux = MAX
 
     for action in actions(board):
-        aux = min(aux, _max(result(board, action)))
+        aux = min(aux, _max(result(board, action), alpha, beta))
+        beta = min(beta, aux)
+        if(alpha >= beta):
+            break
 
     return aux
 
 
-def _max(board):
+def _max(board, alpha, beta):
 
     if(terminal(board)):
         return utility(board)
 
-    aux = -99999
+    aux = MIN
 
     for action in actions(board):
-        aux = max(aux, _min(result(board, action)))
+        aux = max(aux, _min(result(board, action), alpha, beta))
+        alpha = max(alpha, aux)
+        if(alpha >= beta):
+            break
 
     return aux
