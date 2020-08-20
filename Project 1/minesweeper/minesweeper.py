@@ -1,6 +1,6 @@
 import itertools
 import random
-
+import copy
 
 class Minesweeper():
     """
@@ -208,11 +208,10 @@ class MinesweeperAI():
 
         # 3
         cell_neighbors = self.neighbors(cell)
-
-        cell_neighbors -= self.safes
-        cell_neighbors -= self.mines
         cell_neighbors -= self.moves_made
+        cell_neighbors -= self.safes
 
+        print(cell_neighbors)
 
         new_sentence = Sentence(cell_neighbors, count)
         self.knowledge.append(new_sentence)
@@ -222,39 +221,42 @@ class MinesweeperAI():
         tmp_safes = set()
 
         for sentence in self.knowledge:
-            if(len(sentence.cells) == 0):
-                self.knowledge.remove(sentence)
-            else:
-                new_safes = sentence.known_safes()
-                new_mines = sentence.known_mines()
-                
-                if(len(new_safes) != 0):
-                    tmp_safes.update(new_safes)
+            new_safes = sentence.known_safes()
+            new_mines = sentence.known_mines()
 
-                if(len(new_mines) != 0):
-                    tmp_mines.update(new_mines)
-      
+            if(len(new_safes) != 0):
+                tmp_safes.update(new_safes)
+
+            if(len(new_mines) != 0):
+                tmp_mines.update(new_mines)
+
         for safe in tmp_safes:
-            if(safe not in self.safes and safe not in self.mines and safe not in self.moves_made):
-                self.mark_safe(safe)
+            self.mark_safe(safe)
 
         for mine in tmp_mines:
-            if(mine not in self.mines and mine not in self.moves_made and mine not in self.safes):
-                self.mark_mine(mine)
+            self.mark_mine(mine)
 
         # 5
         inferences = []
+        knowledge_base = copy.deepcopy(self.knowledge)
+        
+        for sentence in knowledge_base:
+            for sentence2 in knowledge_base:
 
-        for set1 in self.knowledge:
-            if(len(set1.cells) == 0):
-                self.knowledge.remove(set1)
-            elif(set1 == new_sentence):
-                break;
-            elif(new_sentence.cells <= set1.cells):
-                new_set = set1.cells - new_sentence.cells
-                inferences.append(Sentence(new_set, set1.count - new_sentence.count))
+                set1 = sentence.cells
 
-                
+                set2 = sentence2.cells
+
+                if(set1.issubset(set2) and sentence2 != sentence and len(set2) != 0 and len(set1) != 0 ):
+            
+                    infered_sentence = Sentence(set2 - set1, sentence2.count - sentence.count)
+                    
+                    if(sentence2 in self.knowledge):
+                        self.knowledge.remove(sentence2)
+
+                    if(infered_sentence not in self.knowledge):
+                        inferences.append(infered_sentence)
+
         self.knowledge += inferences
 
     def neighbors(self, cell):
@@ -309,13 +311,12 @@ class MinesweeperAI():
             1) have not already been chosen, and
             2) are not known to be mines
         """
-        
+
         random_move = self.generate_random_position()
 
-        if(random_move not in self.mines):
+        if(random_move not in self.mines and random_move not in self.moves_made):
             print('Random Move:', random_move)
             return random_move
-        
         return None
 
     def generate_random_position(self):
@@ -327,5 +328,8 @@ class MinesweeperAI():
         column = random.randint(0, self.width - 1)
 
         move = (row, column)
+
+        if(move in self.moves_made):
+            return self.generate_random_position()
 
         return move
