@@ -57,7 +57,26 @@ def transition_model(corpus, page, damping_factor):
     linked to by `page`. With probability `1 - damping_factor`, choose
     a link at random chosen from all pages in the corpus.
     """
-    raise NotImplementedError
+    probability_distribution = dict()
+
+    corpus_length = len(corpus)
+    
+    page_out_length = len(corpus[page])
+
+    random_page_probability = ((1 - damping_factor) / corpus_length)
+
+    for  k in corpus.keys():
+        probability_distribution.update({k: random_page_probability})
+
+    if page_out_length >= 0:
+        for i in corpus[page]:
+            probability_distribution[i] = probability_distribution[i] + (damping_factor / page_out_length)
+    else:
+        for  k in corpus.keys():
+            probability_distribution.update({k: 1 / corpus_length})
+
+    return probability_distribution
+
 
 
 def sample_pagerank(corpus, damping_factor, n):
@@ -69,8 +88,22 @@ def sample_pagerank(corpus, damping_factor, n):
     their estimated PageRank value (a value between 0 and 1). All
     PageRank values should sum to 1.
     """
-    raise NotImplementedError
+    page_rank = dict()
 
+    for i in corpus.keys():
+        page_rank[i] = 0
+
+    random_page = random.choices(list(corpus.keys()))[0]
+
+    for i in range(n):
+        page_rank[random_page] += 1/n
+
+        probabilities = transition_model(corpus, random_page, damping_factor).values()
+
+        random_page = random.choices(list(corpus.keys()), weights = list(probabilities))[0]
+
+    return page_rank
+    
 
 def iterate_pagerank(corpus, damping_factor):
     """
@@ -81,8 +114,53 @@ def iterate_pagerank(corpus, damping_factor):
     their estimated PageRank value (a value between 0 and 1). All
     PageRank values should sum to 1.
     """
-    raise NotImplementedError
+    
+    page_rank = dict()
+
+    inverted_corpus = dict()
+    control_changes = True
+
+    
+    copy = corpus.copy() #A page that has no links at all should be interpreted as having one link for every page in the corpus (including itself).
 
 
+    #The function should begin by assigning each page a rank of 1 / N, where N is the total number of pages in the corpus.
+    n = len(corpus.keys())
+    for i in corpus.keys():
+        page_rank[i] = 1 / n
+
+        inverted_corpus[i] = set()
+
+        if(len(corpus[i]) == 0): 
+            copy[i] = set(corpus.keys())       
+   
+
+    #Create inverted corpus
+    for i in copy.keys():
+        for j in copy[i]:
+            inverted_corpus[j].add(i)
+
+    while(control_changes):
+        control_changes = False
+
+        for i in corpus.keys():
+            sum = 0
+
+            for j in inverted_corpus[i]:
+                length = len(copy[j])
+                sum += page_rank[j] / length
+            
+            prob = ((1 - damping_factor) / n) + (damping_factor * sum)
+
+            difference = abs(page_rank[i] - prob) 
+          
+            if(difference > 0.001):
+                control_changes = True
+                
+            page_rank[i] = prob
+                
+
+    return page_rank
+            
 if __name__ == "__main__":
     main()
