@@ -99,7 +99,13 @@ class CrosswordCreator():
         (Remove any values that are inconsistent with a variable's unary
          constraints; in this case, the length of the word.)
         """
-        raise NotImplementedError
+
+        for v in self.crossword.variables:
+            copy = self.domains[v].copy()
+
+            for i in copy:
+                if(v.length != len(i)):
+                    self.domains[v].remove(i)
 
     def revise(self, x, y):
         """
@@ -110,7 +116,24 @@ class CrosswordCreator():
         Return True if a revision was made to the domain of `x`; return
         False if no revision was made.
         """
-        raise NotImplementedError
+        revised = False
+        copy = self.domains[x].copy()
+ 
+        for word in copy:
+            overlap = self.crossword.overlaps[x, y]
+            must_remove = True
+            
+            if(overlap != None):
+                for s in self.domains[y]:
+                    if(word[overlap[0]] == s[overlap[1]]):
+                        must_remove = False
+
+                if(must_remove):
+                    self.domains[x].remove(word)
+                    revised = True
+
+        return revised            
+
 
     def ac3(self, arcs=None):
         """
@@ -121,7 +144,25 @@ class CrosswordCreator():
         Return True if arc consistency is enforced and no domains are empty;
         return False if one or more domains end up empty.
         """
-        raise NotImplementedError
+
+        if(arcs == None):
+            queue = []
+            for i in self.crossword.overlaps:
+                queue.append(i)
+        else: 
+            queue = arcs
+
+        while len(queue) > 0:
+            (x, y) = queue.pop(0)
+            if(self.revise(x, y)):
+                if(len(self.domains[x]) == 0):
+                    return False
+                for z in self.crossword.neighbors(x):
+                    if(x != y):
+                        queue.append((z, x))
+                        
+        return True
+
 
     def assignment_complete(self, assignment):
         """
