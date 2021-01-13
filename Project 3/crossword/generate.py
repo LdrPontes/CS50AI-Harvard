@@ -124,7 +124,7 @@ class CrosswordCreator():
         for word in copy:
             overlap = self.crossword.overlaps[x, y]
             must_remove = True
-            
+
             if(overlap != None):
                 for s in self.domains[y]:
                     if(word[overlap[0]] == s[overlap[1]]):
@@ -162,7 +162,7 @@ class CrosswordCreator():
                 for z in self.crossword.neighbors(x):
                     if(x != y):
                         queue.append((z, x))
-                        
+
         return True
 
 
@@ -188,17 +188,16 @@ class CrosswordCreator():
         for variable in assignment.keys():
             if(variable.length != len(assignment[variable])):
                 return False
-        
+
         #there are no conflicts between neighboring variables.
         for variable in assignment.keys():
             neighbors = self.crossword.neighbors(variable)
-
             for neighbor in neighbors:
                 overlap = self.crossword.overlaps[variable, neighbor]
-                if(overlap != None):
-                    if(neighbor not in assignment.keys() or assignment[variable][overlap[0]] != assignment[neighbor][overlap[1]]):
-                        return False
-        
+
+                if(neighbor in assignment.keys() and assignment[variable][overlap[0]] != assignment[neighbor][overlap[1]]):
+                    return False
+
         return True
 
 
@@ -209,7 +208,25 @@ class CrosswordCreator():
         The first value in the list, for example, should be the one
         that rules out the fewest values among the neighbors of `var`.
         """
-        return self.domains[var]
+        values = list()
+
+        for word in self.domains[var]:
+            count = 0
+            
+            for neighbor in (self.crossword.neighbors(var) - set(assignment.keys())):
+                overlap = self.crossword.overlaps[var, neighbor]
+                count += len(set(filter(lambda x:x[overlap[1]] != word[overlap[0]], self.domains[neighbor])))
+            
+            values.append((word, count))
+        
+        values.sort(key=lambda value: value[1])
+
+        domain_values = list()
+
+        for value in reversed(values):
+            domain_values.append(value[0])
+
+        return domain_values
 
     def select_unassigned_variable(self, assignment):
         """
@@ -223,14 +240,16 @@ class CrosswordCreator():
         all_variables = self.crossword.variables.copy()
         unassigned_variables = all_variables.difference(assigned_variables)
 
-        variable = unassigned_variables.pop()
+        variable = list(unassigned_variables)[0]
 
         for i in unassigned_variables:
             if(len(self.domains[variable]) < len(self.domains[i])):
                 variable = i
+            
+            if(len(self.domains[variable]) == len(self.domains[i]) and len(self.crossword.neighbors(variable)) <= len(self.crossword.neighbors(i))):
+                variable = i
 
         return variable
-
 
 
     def backtrack(self, assignment):
@@ -244,22 +263,32 @@ class CrosswordCreator():
         """
         if(self.assignment_complete(assignment)):
             return assignment
-        
+
         var = self.select_unassigned_variable(assignment)
 
         for value in self.order_domain_values(var, assignment):
-            if(self.consistent(assignment)):
-                assignment.update({var: value})
+            new_assignment = assignment.copy()
+            new_assignment[var] = value
+
+            if(self.consistent(new_assignment)):  
                 
-                result = self.backtrack(assignment)
+                self.inference(var, new_assignment)
+
+                result = self.backtrack(new_assignment)
 
                 if(result != None):
                     return result
 
-                assignment.pop(var)
-
         return None
 
+    def inference(self, var, assignment):
+        arcs = list()
+
+        for neighbor in self.crossword.neighbors(var):
+            if(neighbor not in assignment.keys()):
+                arcs.append((neighbor, var))
+
+        self.ac3(arcs=arcs)
 
 def main():
 
