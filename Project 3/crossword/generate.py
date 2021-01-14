@@ -212,18 +212,18 @@ class CrosswordCreator():
 
         for word in self.domains[var]:
             count = 0
-            
+
             for neighbor in (self.crossword.neighbors(var) - set(assignment.keys())):
                 overlap = self.crossword.overlaps[var, neighbor]
                 count += len(set(filter(lambda x:x[overlap[1]] != word[overlap[0]], self.domains[neighbor])))
-            
+
             values.append((word, count))
-        
+
         values.sort(key=lambda value: value[1])
 
         domain_values = list()
 
-        for value in reversed(values):
+        for value in values:
             domain_values.append(value[0])
 
         return domain_values
@@ -245,7 +245,7 @@ class CrosswordCreator():
         for i in unassigned_variables:
             if(len(self.domains[variable]) < len(self.domains[i])):
                 variable = i
-            
+
             if(len(self.domains[variable]) == len(self.domains[i]) and len(self.crossword.neighbors(variable)) <= len(self.crossword.neighbors(i))):
                 variable = i
 
@@ -283,12 +283,20 @@ class CrosswordCreator():
 
     def inference(self, var, assignment):
         arcs = list()
+        
+        domain_backup = dict()
 
         for neighbor in self.crossword.neighbors(var):
             if(neighbor not in assignment.keys()):
+                domain_backup[neighbor] = self.domains[neighbor].copy()
                 arcs.append((neighbor, var))
 
-        self.ac3(arcs=arcs)
+        result = self.ac3(arcs=arcs)
+
+        if(not result):
+            for neighbor in domain_backup.keys():
+                self.domains[neighbor] = domain_backup[neighbor]
+
 
 def main():
 
