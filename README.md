@@ -30,3 +30,7 @@ A program structure inspired by the human brain that is able to perform tasks ef
 
 <b>Language</b><br/>
 Processing natural language, which is produced and understood by humans.
+
+## Link to course
+
+https://cs50.harvard.edu/ai/2020/
