@@ -1,5 +1,5 @@
 # About me
-Hi! I'm Leandro, I work as a mobile developer and I really enjoy artificial intelligence. Also, I'm a studente at Federal University of Technology - Paraná (UTFPR) in Brazil.
+Hi! I'm Leandro, I work as a mobile developer and I really enjoy artificial intelligence. Also, I'm a student at Federal University of Technology - Paraná (UTFPR) in Brazil.
 
 If you want to contact me, please send me a message in https://www.linkedin.com/in/ldrpontes/
 
