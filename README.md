@@ -1,7 +1,7 @@
 # About me
-Hi! I'm Leandro, I work as a mobile developer and I really enjoy artificial intelligence. Also, I'm a student at Federal University of Technology - Paraná (UTFPR) in Brazil.
+Hey! Welcome to my github, I'm a mobile developer and I really enjoy artificial intelligence. Also, I'm a student at Federal University of Technology - Paraná (UTFPR) in Brazil.
 
-If you want to contact me, please send me a message in https://www.linkedin.com/in/ldrpontes/
+Come to see my Linkedin profile in: https://www.linkedin.com/in/ldrpontes/
 
 # About the course
 ## Harvard - CS50's Introduction to Artificial Intelligence with Python
